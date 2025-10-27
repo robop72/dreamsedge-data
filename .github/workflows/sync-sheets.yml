@@ -19,7 +19,7 @@ jobs:
         # Replace with your actual Google Sheets ID
         sheetId: '19sJ9V-kYI_BAcctQzJwz5-7mYbyZEmpxm9e3I2dDBOg'
         # The sheet name (usually 'Sheet1')
-        sheetName: 'fall'
+        sheetName: 'Sheet1'
         # Output file name
         output: 'data.csv'
 
