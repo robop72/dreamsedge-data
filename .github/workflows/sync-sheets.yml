@@ -1,0 +1,32 @@
+name: Sync Google Sheets to GitHub
+
+on:
+  schedule:
+    # Runs every 6 hours (you can change this)
+    - cron: '0 */6 * * *'
+  workflow_dispatch:  # Allows manual trigger
+
+jobs:
+  sync-sheets:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+
+    - name: Sync Google Sheets
+      uses: mukunku/GoogleSheetsToCSV@v1.0
+      with:
+        # Replace with your actual Google Sheets ID
+        sheetId: '19sJ9V-kYI_BAcctQzJwz5-7mYbyZEmpxm9e3I2dDBOg'
+        # The sheet name (usually 'Sheet1')
+        sheetName: 'fall'
+        # Output file name
+        output: 'data.csv'
+
+    - name: Commit and push if changed
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add -A
+        git diff --staged --quiet || git commit -m "Update data from Google Sheets"
+        git push
