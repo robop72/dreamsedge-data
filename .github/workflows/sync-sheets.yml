@@ -2,7 +2,7 @@ name: Sync Google Sheets to GitHub
 
 on:
   schedule:
-    # Runs every 6 hours (you can change this)
+    # Runs every 6 hours
     - cron: '0 */6 * * *'
   workflow_dispatch:  # Allows manual trigger
 
@@ -13,15 +13,50 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v3
 
-    - name: Sync Google Sheets
-      uses: mukunku/GoogleSheetsToCSV@v1.0
+    - name: Set up Python
+      uses: actions/setup-python@v4
       with:
-        # Replace with your actual Google Sheets ID
-        sheetId: '19sJ9V-kYI_BAcctQzJwz5-7mYbyZEmpxm9e3I2dDBOg'
-        # The sheet name (usually 'Sheet1')
-        sheetName: 'Sheet1'
-        # Output file name
-        output: 'data.csv'
+        python-version: '3.x'
+
+    - name: Install dependencies
+      run: |
+        pip install gspread pandas oauth2client
+
+    - name: Download Google Sheets as CSV
+      run: |
+        python -c "
+import gspread
+import pandas as pd
+from oauth2client.service_account import ServiceAccountCredentials
+import os
+
+# Use Google Sheets API without authentication for public sheets
+gc = gspread.service_account(filename='credentials.json')
+
+# Your Google Sheets ID
+SHEET_ID = '19sJ9V-kYI_BAcctQzJwz5-7mYbyZEmpxm9e3I2dDBOg'
+
+try:
+    # Try to open without auth first (for public sheets)
+    sh = gc.open_by_key(SHEET_ID)
+except:
+    # If that fails, the sheet might be private
+    print('Sheet might be private or not found')
+    exit(1)
+
+# Get the first worksheet
+worksheet = sh.sheet1
+
+# Get all data
+data = worksheet.get_all_records()
+
+# Convert to DataFrame and save as CSV
+df = pd.DataFrame(data)
+df.to_csv('data.csv', index=False)
+print(f'Successfully downloaded {len(data)} records')
+"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     - name: Commit and push if changed
       run: |
